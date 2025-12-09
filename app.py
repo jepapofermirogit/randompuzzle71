@@ -19,14 +19,21 @@ db.init_app(app)
 all_key_service = AllKeyService()
 watchlist_service = WatchlistService()
 
-# Create database tables on first request
+# Create database tables on first request (with error handling)
+_db_initialized = False
+
 @app.before_request
 def create_tables():
-    try:
-        db.create_all()
-    except Exception as e:
-        # Log the error but don't crash the app
-        print(f"Warning: Could not create database tables: {e}")
+    global _db_initialized
+    if not _db_initialized:
+        try:
+            db.create_all()
+            _db_initialized = True
+            print("✓ Database tables created/verified")
+        except Exception as e:
+            # Log error but continue - app will work with limited functionality
+            print(f"⚠ Database warning (app will continue): {type(e).__name__}: {str(e)[:100]}")
+            _db_initialized = True  # Only try once per deployment
 
 @app.route('/')
 def home():

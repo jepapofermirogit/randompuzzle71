@@ -28,32 +28,31 @@ FLASK_DEBUG = True  # Set to True for development (auto-reload templates)
 # Database configuration
 import os
 
-# Check if running on Vercel or if DATABASE_URL is provided
+# Determine database URL
 if os.environ.get('DATABASE_URL'):
-    # Use PostgreSQL (Supabase) for production
-    # Use connection pooler for serverless environments (Vercel)
-    db_url = os.environ.get('DATABASE_URL')
-    
-    # Convert to use connection pooler if it's a Supabase URL
-    if 'supabase.co' in db_url:
-        # Replace the port with connection pooler port and add ?sslmode=require
-        db_url = db_url.replace(':5432', ':6543') + '?sslmode=require'
-    
-    SQLALCHEMY_DATABASE_URI = db_url
-    
-    # Connection pooling settings for serverless
+    # Supabase provided - use it
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') + '?sslmode=require'
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_size': 5,
-        'pool_recycle': 3600,
+        'pool_size': 1,
+        'max_overflow': 0,
+        'pool_recycle': 300,
         'pool_pre_ping': True,
         'connect_args': {
-            'connect_timeout': 10,
+            'connect_timeout': 5,
         }
     }
 else:
-    # Use SQLite locally
-    _db_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
-    _db_path = os.path.join(_db_dir, 'tracking.db')
+    # Fall back to SQLite locally or on Vercel if DATABASE_URL not set
+    # Note: On Vercel, data persists only during the current request
+    # For persistent storage, please set DATABASE_URL to Supabase connection string
+    if os.environ.get('VERCEL'):
+        # On Vercel without DATABASE_URL, use /tmp for temporary storage
+        _db_path = '/tmp/tracking.db'
+    else:
+        # Local development
+        _db_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
+        _db_path = os.path.join(_db_dir, 'tracking.db')
+    
     SQLALCHEMY_DATABASE_URI = f'sqlite:///{_db_path}'
     SQLALCHEMY_ENGINE_OPTIONS = {}
 
