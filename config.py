@@ -27,8 +27,16 @@ FLASK_DEBUG = True  # Set to True for development (auto-reload templates)
 
 # Database configuration
 import os
-_db_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
-_db_path = os.path.join(_db_dir, 'tracking.db')
-SQLALCHEMY_DATABASE_URI = f'sqlite:///{_db_path}'
+
+# Check if running on Vercel or if DATABASE_URL is provided
+if os.environ.get('DATABASE_URL'):
+    # Use PostgreSQL (Supabase) for production
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+else:
+    # Use SQLite locally
+    _db_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
+    _db_path = os.path.join(_db_dir, 'tracking.db')
+    SQLALCHEMY_DATABASE_URI = f'sqlite:///{_db_path}'
+
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 

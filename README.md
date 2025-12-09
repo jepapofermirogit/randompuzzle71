@@ -147,7 +147,25 @@ const AUTO_CLICK_DELAY = 1000;     // Delay between page changes (milliseconds)
 
 1. GitHub account with repository
 2. Vercel account (https://vercel.com)
-3. Git installed locally
+3. **Supabase account (https://supabase.com)** - Free tier available!
+4. Git installed locally
+
+### Why Supabase?
+
+- **Persistent Database**: Data persists across Vercel deployments
+- **Free Tier**: 500 MB storage, unlimited API requests
+- **PostgreSQL**: Same powerful database as paid services
+- **Easy Setup**: Takes 5 minutes to get connection string
+
+### Get Supabase Connection String
+
+1. Sign up at https://supabase.com (free)
+2. Create a new project
+3. Go to **Settings** → **Database**
+4. Copy the **Connection string (URI)**
+5. If password has `@`, replace with `%40` in the URI
+
+Example: `postgresql://postgres:password%40123@db.xxx.supabase.co:5432/postgres`
 
 ### Step 1: Initialize Git and Push to GitHub
 
@@ -159,67 +177,97 @@ git init
 git add .
 
 # Commit
-git commit -m "Initial commit: Bitcoin address generator with auto-navigation"
+git commit -m "Add Supabase PostgreSQL integration for persistent database"
 
 # Add remote (replace with your GitHub repo URL)
-git remote add origin https://github.com/YOUR_USERNAME/legacy-segwit-adds.git
+git remote add origin https://github.com/YOUR_USERNAME/your-repo.git
 
 # Push to GitHub
 git branch -M main
 git push -u origin main
 ```
 
-### Step 2: Deploy to Vercel
+### Step 2: Deploy to Vercel with Supabase
 
-#### Option A: Using Vercel CLI
-
-```bash
-# Install Vercel CLI globally
-npm install -g vercel
-
-# Deploy
-vercel
-
-# Follow the prompts to:
-# - Connect your GitHub account
-# - Select your repository
-# - Configure settings
-```
-
-#### Option B: Using Vercel Web Dashboard
+#### Option A: Using Vercel Web Dashboard (Recommended)
 
 1. Go to https://vercel.com/new
 2. Click "Import Git Repository"
-3. Paste your GitHub repo URL
-4. Vercel will auto-detect it's a Python/Flask project
-5. Click "Deploy"
+3. Paste your GitHub repo URL and import
+4. **Before clicking Deploy**, go to **Settings** → **Environment Variables**
+5. Add environment variable:
+   - **Name**: `DATABASE_URL`
+   - **Value**: (Paste your Supabase connection string with `%40` for `@`)
+6. Click "Deploy"
 
-### Environment Variables for Vercel
+#### Option B: Using Vercel CLI
 
-If needed, add environment variables in Vercel dashboard:
+```bash
+# Install Vercel CLI
+npm install -g vercel
 
-- `FLASK_ENV=production`
-- Any other custom settings
+# Deploy (will prompt for environment variables)
+vercel
 
-### Important Notes for Vercel
+# Add environment variable when prompted:
+# DATABASE_URL = postgresql://postgres:password%40...
+```
 
-1. **Database on Vercel**: 
-   - SQLite database works locally with full persistence
-   - On Vercel's serverless environment, database in `/tmp` is ephemeral
-   - For production, consider migrating to PostgreSQL or other cloud database
-   - Current setup: uses `/tmp/tracking.db` on Vercel (data not guaranteed to persist between deployments)
+### Environment Variable Setup in Vercel
+
+**Critical**: The app looks for `DATABASE_URL` environment variable on Vercel.
+
+Steps:
+1. Go to your Vercel project → Settings
+2. Environment Variables
+3. Click "Add" and fill:
+   - **Name**: `DATABASE_URL`
+   - **Value**: `postgresql://postgres:YOUR_PASSWORD%40XX@db.dtgynqmsazbdhgvhpiwz.supabase.co:5432/postgres`
+4. Select **Production** environment
+5. Click "Save"
+6. **Redeploy** your project for changes to take effect
+
+### Local Development (SQLite)
+
+When running locally without `DATABASE_URL` environment variable:
+- App automatically uses SQLite (`data/tracking.db`)
+- Full persistence across restarts
+- No setup needed!
+
+Test locally:
+```bash
+source .venv/bin/activate
+python app.py
+# Database uses data/tracking.db automatically
+```
+
+### Important Notes
+
+1. **Data Persistence**: 
+   - ✅ Persists across Vercel deployments
+   - ✅ Persists across all requests
+   - ✅ Data is in Supabase cloud servers
 
 2. **Cold Starts**: 
-   - First request may take longer due to serverless cold start
-   - This is normal behavior
+   - First request may take 1-2 seconds
+   - This is normal Vercel serverless behavior
 
-3. **Memory Limits**: 
-   - Vercel has memory limits; very large address batches may hit limits
-   - Adjust `ADDRESSES_PER_PAGE` if needed
+3. **Database Limits** (Free Tier): 
+   - 500 MB storage
+   - 25 concurrent connections
+   - Sufficient for this application
 
-4. **Timeout**: 
-   - Requests timeout after 60 seconds
-   - Vercel doesn't support indefinite running processes
+4. **Troubleshooting**:
+   - **"could not translate host name"**: Check connection string format and URL encoding
+   - **"too many connections"**: Hit connection limit; upgrade Supabase
+   - **Data not persisting**: Verify `DATABASE_URL` is set in Vercel environment variables
+
+### Database Architecture
+
+**Local**: SQLite (`data/tracking.db`)
+**Production (Vercel)**: PostgreSQL (Supabase)
+
+Both use the same SQLAlchemy ORM models, so switching between them is seamless.
 
 ## Development
 
@@ -246,6 +294,12 @@ MIT License
 For issues or questions, please create a GitHub issue.
 
 ## Changelog
+
+### v2.1.0
+- Added Supabase PostgreSQL support for persistent cloud database
+- Automatic environment detection (SQLite local, PostgreSQL on Vercel)
+- Updated deployment guide with Supabase setup instructions
+- Configuration now supports DATABASE_URL environment variable
 
 ### v2.0.0
 - Implemented SQLite database for persistent tracking
