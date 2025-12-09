@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Watchlist - All Key{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-lg m-4 p-6">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">📋 Bitcoin Address Watchlist</h1>
+        <p class="text-gray-600">Add Bitcoin addresses to match against pages. Matching addresses will be highlighted.</p>
+    </div>
+
+    <!-- Add Address Form -->
+    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">Add Address</h2>
+        <form method="POST" action="{{ url_for('add_to_watchlist') }}" class="flex gap-2">
+            <input type="text" 
+                   name="address" 
+                   placeholder="Enter Bitcoin address (compressed legacy)" 
+                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                   required>
+            <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
+                ➕ Add
+            </button>
+        </form>
+    </div>
+
+    <!-- Watchlist Addresses -->
+    <div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">
+            Watched Addresses ({{ addresses|length }})
+        </h2>
+        
+        {% if addresses %}
+        <div class="overflow-x-auto">
+            <table class="table-auto w-full font-mono text-sm">
+                <thead class="text-gray-500 border-b border-b-slate-200">
+                    <tr>
+                        <td class="px-4 py-2 text-left">Address</td>
+                        <td class="px-4 py-2 text-center w-20">Action</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for address in addresses %}
+                    <tr class="hover:bg-slate-50 border-b border-b-slate-100">
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <a href="https://www.blockchain.com/btc/address/{{ address }}"
+                                   target="_blank"
+                                   class="text-blue-500 hover:text-blue-900 hover:underline break-all">
+                                    {{ address }}
+                                </a>
+                                <button onclick="copyToClipboard('{{ address }}')" 
+                                        class="text-gray-400 hover:text-gray-600 transition-colors" 
+                                        title="Copy address">
+                                    📋
+                                </button>
+                            </div>
+                        </td>
+                        <td class="px-4 py-2 text-center">
+                            <form method="POST" action="{{ url_for('remove_from_watchlist') }}" style="display: inline;">
+                                <input type="hidden" name="address" value="{{ address }}">
+                                <button type="submit" class="text-red-500 hover:text-red-700 transition-colors" title="Remove">
+                                    ✕
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="mt-6 flex gap-2">
+            <a href="{{ url_for('home_page', page=1) }}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                ← Back to Home
+            </a>
+        </div>
+        {% else %}
+        <div class="text-center py-8 bg-gray-50 rounded-lg">
+            <p class="text-gray-500 mb-4">No addresses in watchlist yet.</p>
+            <a href="{{ url_for('home_page', page=1) }}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                ← Back to Home
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text);
+    alert('Copied to clipboard!');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,9 @@
+Flask==2.3.3
+requests==2.31.0
+bitcoin==1.1.42
+ecdsa==0.18.0
+base58==2.1.1
+cryptography==41.0.7
+Jinja2==3.1.2
+Werkzeug==2.3.7
+gunicorn==21.2.0

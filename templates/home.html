@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Keys - All Key{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-lg m-4 p-6">
+    <!-- Top Navigation -->
+    <div class="mb-6 pb-4 border-b border-gray-200">
+        <div class="text-center mb-4">
+            <div class="text-lg font-semibold text-gray-800">Page {{ format_scientific_notation(page) }} ({{ page_percentage }}%)</div>
+            <div class="text-sm text-gray-500">{{ format_scientific_notation(max_page) }} total pages</div>
+            {% if not is_watchlist_empty %}
+            <div class="mt-2 text-sm font-semibold {% if watchlist_matches > 0 %}text-green-600{% else %}text-gray-500{% endif %}" data-watchlist-matches="{{ watchlist_matches }}">
+                🎯 Watchlist Matches: {{ watchlist_matches }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="flex justify-center items-center gap-2 flex-wrap">
+            <!-- First Button -->
+            <a href="{{ url_for('home_page', page=1) if page > 1 else '#' }}"
+               class="flex items-center gap-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm {% if page <= 1 %}opacity-50 cursor-not-allowed{% endif %}">
+                <span>⏮</span>
+                <span>First</span>
+            </a>
+            <!-- Previous Button -->
+            <a href="{{ url_for('home_page', page=page-1) if page > 1 else '#' }}"
+               class="flex items-center gap-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm {% if page <= 1 %}opacity-50 cursor-not-allowed{% endif %}">
+                <span>←</span>
+                <span>Previous</span>
+            </a>
+            <!-- Random Button -->
+            <button onclick="goToRandomPage()" 
+               class="flex items-center gap-1 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition-colors text-sm">
+                <span>🎲</span>
+                <span>Random</span>
+            </button>
+            <!-- Next Button -->
+            <a href="{{ url_for('home_page', page=page+1) if page < max_page else '#' }}"
+               class="flex items-center gap-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm {% if page >= max_page %}opacity-50 cursor-not-allowed{% endif %}">
+                <span>Next</span>
+                <span>→</span>
+            </a>
+            <!-- Last Button -->
+            <a href="{{ url_for('home_page', page=max_page) if page < max_page else '#' }}"
+               class="flex items-center gap-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm {% if page >= max_page %}opacity-50 cursor-not-allowed{% endif %}">
+                <span>Last</span>
+                <span>⏭</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+    <table class="table-auto w-full font-mono font-light min-w-full">
+        <thead class="text-gray-500 border-b border-b-slate-200">
+            <tr>
+                <td class="px-4 py-2 whitespace-nowrap">Private Key</td>
+                <td class="px-4 py-2 whitespace-nowrap">Compressed Address</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr class="hover:bg-slate-100 border-b border-b-slate-100">
+                <td class="px-4 py-2 whitespace-nowrap">
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono">{{ truncate_text(item.hex_private_key, 5, 18) }}</span>
+                        <button onclick="copyToClipboard('{{ item.hex_private_key }}')" 
+                                class="text-gray-400 hover:text-gray-600 transition-colors" 
+                                title="Copy private key">
+                            📋
+                        </button>
+                    </div>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap">
+                    <div class="flex items-center gap-2">
+                        <a href="https://www.blockchain.com/btc/address/{{ item.address_compressed }}"
+                           target="_blank"
+                           class="text-blue-500 hover:text-blue-900 hover:underline font-mono {% if item.is_watchlist_match_compressed %}bg-yellow-100 px-2 py-1 rounded{% endif %}">
+                            {{ truncate_text(item.address_compressed, 18, 5) }}
+                        </a>
+                        {% if item.is_watchlist_match_compressed %}<span title="Watchlist Match">🎯</span>{% endif %}
+                        <button onclick="copyToClipboard('{{ item.address_compressed }}')" 
+                                class="text-gray-400 hover:text-gray-600 transition-colors" 
+                                title="Copy address">
+                            📋
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+
+        <div class="flex justify-center items-center gap-2 flex-wrap">
+            <!-- First Button -->
+            <a href="{{ url_for('home_page', page=1) if page > 1 else '#' }}"
+               class="flex items-center gap-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm {% if page <= 1 %}opacity-50 cursor-not-allowed{% endif %}">
+                <span>⏮</span>
+                <span>First</span>
+            </a>
+            <!-- Previous Button -->
+            <a href="{{ url_for('home_page', page=page-1) if page > 1 else '#' }}"
+               class="flex items-center gap-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm {% if page <= 1 %}opacity-50 cursor-not-allowed{% endif %}">
+                <span>←</span>
+                <span>Previous</span>
+            </a>
+            <!-- Random Button -->
+            <button onclick="goToRandomPage()" 
+               class="flex items-center gap-1 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition-colors text-sm">
+                <span>🎲</span>
+                <span>Random</span>
+            </button>
+            <!-- Next Button -->
+            <a href="{{ url_for('home_page', page=page+1) if page < max_page else '#' }}"
+               class="flex items-center gap-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm {% if page >= max_page %}opacity-50 cursor-not-allowed{% endif %}">
+                <span>Next</span>
+                <span>→</span>
+            </a>
+            <!-- Last Button -->
+            <a href="{{ url_for('home_page', page=max_page) if page < max_page else '#' }}"
+               class="flex items-center gap-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm {% if page >= max_page %}opacity-50 cursor-not-allowed{% endif %}">
+                <span>Last</span>
+                <span>⏭</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

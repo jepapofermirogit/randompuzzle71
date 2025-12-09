@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}All Key{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body data-current-page="{{ page or 0 }}" data-max-page="{{ max_page or 0 }}" data-addresses-per-page="{{ ADDRESSES_PER_PAGE or 5750 }}" data-hex-key-start="{{ HEX_KEY_START or 0 }}" data-hex-key-end="{{ HEX_KEY_END or 0 }}">
+    <div class="text-sm">
+        <header class="text-white bg-blue-800 px-6 py-4 mb-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <a href="{{ url_for('home_page', page=1) }}" 
+                       class="px-4 py-2 hover:bg-blue-700 rounded transition">Keys</a>
+                    <a href="{{ url_for('search') }}" 
+                       class="px-4 py-2 hover:bg-blue-700 rounded transition">Address</a>
+                    <a href="{{ url_for('watchlist') }}" 
+                       class="px-4 py-2 hover:bg-blue-700 rounded transition">Watchlist</a>
+                    <a href="{{ url_for('about') }}" 
+                       class="px-4 py-2 hover:bg-blue-700 rounded transition">Info</a>
+                </div>
+            </div>
+        </header>
+        <main class="text-slate-800 overflow-x-auto">
+            {% block content %}{% endblock %}
+        </main>
+        <footer class="px-6 py-4 text-slate-500">♥ All Bitcoin Addresses</footer>
+    </div>
+
+    <script>
+        // Configuration for auto-click random button
+        const AUTO_CLICK_RANDOM = true;  // Set to false to disable auto-clicking
+        const AUTO_CLICK_DELAY = 1000;   // Delay in milliseconds before auto-clicking (default: 3 seconds)
+        
+        // Track if auto-click should continue
+        let shouldContinueAutoClick = true;
+        
+        // Click handler for random button
+        function goToRandomPage() {
+            // Use the server-side /random route which handles large number precision correctly
+            window.location.href = '/random';
+        }
+
+        // Check if watchlist matches were found on this page
+        function checkForWatchlistMatches() {
+            // Check if watchlist matches indicator is present and not empty
+            const watchlistIndicator = document.querySelector('[data-watchlist-matches]');
+            if (watchlistIndicator) {
+                const matchesCount = parseInt(watchlistIndicator.getAttribute('data-watchlist-matches'));
+                if (matchesCount > 0) {
+                    console.log('🎯 Watchlist match found! Stopping auto-reload.');
+                    shouldContinueAutoClick = false;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Auto-click random button after page loads
+        function initializeAutoClick() {
+            // First check if watchlist matches were found
+            if (checkForWatchlistMatches()) {
+                // Stop auto-clicking if a match is found
+                shouldContinueAutoClick = false;
+                return;
+            }
+            
+            if (AUTO_CLICK_RANDOM && shouldContinueAutoClick) {
+                setTimeout(function() {
+                    if (shouldContinueAutoClick) {
+                        console.log('Auto-clicking random button...');
+                        goToRandomPage();
+                    }
+                }, AUTO_CLICK_DELAY);
+            }
+        }
+
+        // Initialize auto-click when entire page has fully loaded (including images, stylesheets, etc.)
+        window.addEventListener('load', initializeAutoClick);
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                // Show a brief success message
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '✓';
+                button.classList.add('text-green-600');
+                
+                setTimeout(function() {
+                    button.innerHTML = originalText;
+                    button.classList.remove('text-green-600');
+                }, 1000);
+            }).catch(function(err) {
+                console.error('Could not copy text: ', err);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                // Show success message
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '✓';
+                button.classList.add('text-green-600');
+                
+                setTimeout(function() {
+                    button.innerHTML = originalText;
+                    button.classList.remove('text-green-600');
+                }, 1000);
+            });
+        }
+    </script>
+</body>
+</html>
