@@ -24,3 +24,11 @@ BITCOIN_MAX_NUMBER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd
 FLASK_HOST = '0.0.0.0'
 FLASK_PORT = 5001
 FLASK_DEBUG = True  # Set to True for development (auto-reload templates)
+
+# Database configuration
+import os
+_db_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
+_db_path = os.path.join(_db_dir, 'tracking.db')
+SQLALCHEMY_DATABASE_URI = f'sqlite:///{_db_path}'
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+

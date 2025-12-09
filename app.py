@@ -1,15 +1,27 @@
 from flask import Flask, render_template, request, redirect, url_for
 from services.all_key_service import AllKeyService
 from services.watchlist_service import WatchlistService
-from services.tracking_service import TrackingService
-from config import ADDRESSES_PER_PAGE, BITCOIN_MAX_NUMBER, FLASK_HOST, FLASK_PORT, FLASK_DEBUG, MAX_SEARCH_PAGES, HEX_KEY_START, HEX_KEY_END
+from services.database_service import DatabaseService
+from models.database import db
+from config import ADDRESSES_PER_PAGE, BITCOIN_MAX_NUMBER, FLASK_HOST, FLASK_PORT, FLASK_DEBUG, MAX_SEARCH_PAGES, HEX_KEY_START, HEX_KEY_END, SQLALCHEMY_DATABASE_URI
 
 app = Flask(__name__)
+
+# Configure SQLAlchemy
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize database with app context
+db.init_app(app)
 
 # Initialize services
 all_key_service = AllKeyService()
 watchlist_service = WatchlistService()
-tracking_service = TrackingService()
+
+# Create database tables on first request
+@app.before_request
+def create_tables():
+    db.create_all()
 
 @app.route('/')
 def home():
@@ -30,8 +42,8 @@ def home_page():
     # Get Bitcoin keys and addresses
     items = all_key_service.get_data(page, limit_per_page)
     
-    # Record visited page
-    tracking_service.add_visited_page(page)
+    # Record visited page to database
+    DatabaseService.add_visited_page(page)
     
     # Check watchlist for matches
     all_addresses = []
@@ -43,11 +55,11 @@ def home_page():
     # Add watchlist match indicator to items and record matches
     for item in items:
         item.is_watchlist_match_compressed = item.address_compressed in watchlist_matches
-        # Record matched addresses to file
+        # Record matched addresses to database
         if item.is_watchlist_match_compressed:
-            tracking_service.add_matched_address(
-                item.address_compressed,
+            DatabaseService.add_matched_address(
                 page,
+                item.address_compressed,
                 item.hex_private_key
             )
     
