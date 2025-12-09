@@ -31,12 +31,31 @@ import os
 # Check if running on Vercel or if DATABASE_URL is provided
 if os.environ.get('DATABASE_URL'):
     # Use PostgreSQL (Supabase) for production
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    # Use connection pooler for serverless environments (Vercel)
+    db_url = os.environ.get('DATABASE_URL')
+    
+    # Convert to use connection pooler if it's a Supabase URL
+    if 'supabase.co' in db_url:
+        # Replace the port with connection pooler port and add ?sslmode=require
+        db_url = db_url.replace(':5432', ':6543') + '?sslmode=require'
+    
+    SQLALCHEMY_DATABASE_URI = db_url
+    
+    # Connection pooling settings for serverless
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 5,
+        'pool_recycle': 3600,
+        'pool_pre_ping': True,
+        'connect_args': {
+            'connect_timeout': 10,
+        }
+    }
 else:
     # Use SQLite locally
     _db_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
     _db_path = os.path.join(_db_dir, 'tracking.db')
     SQLALCHEMY_DATABASE_URI = f'sqlite:///{_db_path}'
+    SQLALCHEMY_ENGINE_OPTIONS = {}
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 

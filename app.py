@@ -3,13 +3,14 @@ from services.all_key_service import AllKeyService
 from services.watchlist_service import WatchlistService
 from services.database_service import DatabaseService
 from models.database import db
-from config import ADDRESSES_PER_PAGE, BITCOIN_MAX_NUMBER, FLASK_HOST, FLASK_PORT, FLASK_DEBUG, MAX_SEARCH_PAGES, HEX_KEY_START, HEX_KEY_END, SQLALCHEMY_DATABASE_URI
+from config import ADDRESSES_PER_PAGE, BITCOIN_MAX_NUMBER, FLASK_HOST, FLASK_PORT, FLASK_DEBUG, MAX_SEARCH_PAGES, HEX_KEY_START, HEX_KEY_END, SQLALCHEMY_DATABASE_URI, SQLALCHEMY_ENGINE_OPTIONS
 
 app = Flask(__name__)
 
 # Configure SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = SQLALCHEMY_ENGINE_OPTIONS
 
 # Initialize database with app context
 db.init_app(app)
@@ -21,7 +22,11 @@ watchlist_service = WatchlistService()
 # Create database tables on first request
 @app.before_request
 def create_tables():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception as e:
+        # Log the error but don't crash the app
+        print(f"Warning: Could not create database tables: {e}")
 
 @app.route('/')
 def home():
