@@ -98,15 +98,37 @@ Add Bitcoin addresses to monitor in `watchlist.txt` (one address per line):
 
 ## Data Tracking
 
-### Visited Pages
-File: `data/visited_pages.txt`
-- One page number per line
-- No duplicates recorded
+The application now uses **SQLite database** for persistent tracking of visited pages and matched addresses.
 
-### Matched Addresses
-File: `data/matched_addresses.txt`
-- Format: `TIMESTAMP | Page: PAGE_NUMBER | Address: ADDRESS | PrivateKey: HEX_KEY`
-- Automatically created when a watchlist address match is found
+### Database Structure
+
+**VisitedPages Table:**
+- `id` (Integer, Primary Key)
+- `page_number` (String, Unique) - The page number visited
+- `visited_at` (DateTime) - Timestamp when page was visited
+
+**MatchedAddresses Table:**
+- `id` (Integer, Primary Key)
+- `timestamp` (DateTime) - When the match was found
+- `page_number` (String) - The page containing the match
+- `address` (String) - The matched Bitcoin address
+- `private_key` (String) - The corresponding private key (hex)
+
+### Database File
+- Location: `data/tracking.db`
+- Format: SQLite 3
+- Persists across application restarts both locally and on Vercel
+- Automatically created on first run
+
+### Database Operations
+
+Database operations are handled by `services/database_service.py`:
+- `add_visited_page(page_number)` - Record a visited page
+- `get_visited_pages()` - Get list of all visited pages
+- `clear_visited_pages()` - Clear all visited page records
+- `add_matched_address(page_number, address, private_key)` - Log a matched address
+- `get_matched_addresses()` - Get all matched addresses with timestamps
+- `clear_matched_addresses()` - Clear all matched address records
 
 ## Auto-Navigation Configuration
 
@@ -181,10 +203,11 @@ If needed, add environment variables in Vercel dashboard:
 
 ### Important Notes for Vercel
 
-1. **File Storage**: 
-   - Vercel is serverless and doesn't persist files between deployments
-   - `data/visited_pages.txt` and `data/matched_addresses.txt` will be reset on redeploy
-   - Consider using a database or cloud storage for persistent tracking
+1. **Database on Vercel**: 
+   - SQLite database works locally with full persistence
+   - On Vercel's serverless environment, database in `/tmp` is ephemeral
+   - For production, consider migrating to PostgreSQL or other cloud database
+   - Current setup: uses `/tmp/tracking.db` on Vercel (data not guaranteed to persist between deployments)
 
 2. **Cold Starts**: 
    - First request may take longer due to serverless cold start
@@ -223,6 +246,12 @@ MIT License
 For issues or questions, please create a GitHub issue.
 
 ## Changelog
+
+### v2.0.0
+- Implemented SQLite database for persistent tracking
+- Replaced file-based tracking with DatabaseService
+- Improved data integrity and query capabilities
+- Database tables: VisitedPages and MatchedAddresses
 
 ### v1.0.0
 - Initial release

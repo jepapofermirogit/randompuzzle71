@@ -46,8 +46,15 @@ Thumbs.db
 .env.local
 .env.*.local
 
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
 # Data files (optional - keep if you want to track visited pages and matches)
 # data/visited_pages.txt
+# data/matched_addresses.txt
+# data/tracking.db
 # data/matched_addresses.txt
 
 # Cache
